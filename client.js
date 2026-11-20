@@ -47,6 +47,8 @@ window.__ModuleLoader__.load({
       needTask: 'Add a task description first.',
       historyLabel: 'Recent requests',
       historyEmpty: 'Copied requests appear here.',
+      open: 'Open',
+      collapse: 'Collapse',
     }
     const ru = {
       title: 'Команда',
@@ -77,6 +79,8 @@ window.__ModuleLoader__.load({
       needTask: 'Сначала опишите задачу.',
       historyLabel: 'Последние задания',
       historyEmpty: 'Скопированные задания появятся здесь.',
+      open: 'Открыть',
+      collapse: 'Свернуть',
     }
 
     /** Шаблоны заданий: что подставить в поле и какие роли включить. */
@@ -214,6 +218,9 @@ window.__ModuleLoader__.load({
       const [parallel, setParallel] = React.useState(true)
       const [notice, setNotice] = React.useState('')
       const [history, setHistory] = React.useState(() => readHistory())
+      // По умолчанию карточка свёрнута: в списке плагинов она не должна
+      // занимать пол-экрана.
+      const [open, setOpen] = React.useState(false)
 
       const prepared = task.trim() === '' ? '' : buildRequest({ task, roles, parallel })
 
@@ -252,6 +259,20 @@ window.__ModuleLoader__.load({
         setParallel(entry.parallel)
         setTemplate('custom')
         setNotice('')
+      }
+
+      if (!open) {
+        return h(
+          'div',
+          { style: S.card },
+          h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, t('heading')),
+          h('span', { style: { fontSize: 12, opacity: 0.7, lineHeight: 1.5 } }, t('hint')),
+          h(
+            'div',
+            { style: S.row },
+            h('button', { style: S.primary, onClick: () => setOpen(true) }, t('open')),
+          ),
+        )
       }
 
       const checkbox = (checked, onChange, label) =>
@@ -304,6 +325,7 @@ window.__ModuleLoader__.load({
             },
             t('clear'),
           ),
+          h('button', { style: S.button, onClick: () => setOpen(false) }, t('collapse')),
           notice !== '' ? h('span', { style: { fontSize: 12, opacity: 0.75 } }, notice) : null,
         ),
         h('span', { style: S.label }, t('previewLabel')),
