@@ -1,6 +1,6 @@
 {
   "name": "dsh-team",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Панель «Команда»: шаблоны заданий, роли, параллельность и готовый текст для отправки в чат",
   "type": "module",
   "license": "MIT",
@@ -48,5 +48,6 @@
         "@deepseek-ai/dsh-client-ui-slots"
       ]
     }
-  }
+  },
+  "icon": "./icon.svg"
 }
