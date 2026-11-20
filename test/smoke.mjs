@@ -67,5 +67,18 @@ const minimal = exported.buildRequest({ task: 'проверить', roles: {}, p
 assert.match(minimal, /по очереди/)
 assert.ok(!minimal.includes('roleResearcher'))
 
+// шаблоны: у каждого есть подпись и набор ролей
+assert.ok(Array.isArray(exported.TEMPLATES))
+assert.equal(exported.TEMPLATES.length, 5)
+for (const template of exported.TEMPLATES) {
+  assert.equal(typeof template.labelKey, 'string')
+  assert.equal(typeof template.roles, 'object')
+  assert.equal(typeof template.parallel, 'boolean')
+}
+assert.deepEqual(
+  exported.TEMPLATES.map((item) => item.id),
+  ['custom', 'review', 'refactor', 'research', 'tests'],
+)
+
 console.log('team smoke: OK')
 console.log('  карточка:', card.children.length, 'элементов | задание:', full.split('\n').length, 'строк')

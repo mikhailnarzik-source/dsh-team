@@ -1,9 +1,10 @@
 /**
  * Browser half of `dsh-team`.
  *
- * Панель собирает задание для команды помощников: роли, объём работы и
+ * Панель собирает задание для команды помощников: шаблон, роли, объём работы и
  * готовый текст, который остаётся вставить в поле ввода. Сборка текста —
- * единственная задача плагина, поэтому здесь нет ни маршрутов, ни хранилища.
+ * единственная задача плагина, поэтому здесь нет ни маршрутов, ни хранилища:
+ * история последних заданий лежит в localStorage.
  */
 window.__ModuleLoader__.load({
   id: 'dsh-team',
@@ -14,11 +15,23 @@ window.__ModuleLoader__.load({
     const h = React.createElement
 
     const NS = 'dshTeam'
+    const HISTORY_KEY = 'dsh-team:history'
+    const HISTORY_LIMIT = 5
 
     const en = {
       title: 'Team',
       heading: 'Team of assistants',
-      hint: 'Describe the task, pick the roles — the panel prepares a ready request. Paste it into the message field and send.',
+      hint: 'Pick a template, describe the task, choose the roles — the panel prepares a ready request. Paste it into the message field and send.',
+      templateLabel: 'Template',
+      templateCustom: 'Own task',
+      templateReview: 'Code review',
+      templateRefactor: 'Refactoring',
+      templateResearch: 'Research',
+      templateTests: 'Tests',
+      reviewSeed: 'Review the code in <path>: find errors and risks, suggest concrete fixes.',
+      refactorSeed: 'Refactor <what>: keep behaviour, simplify the structure, run the tests.',
+      researchSeed: 'Research <topic>: gather facts from the code and documentation, summarise the key findings.',
+      testsSeed: 'Write tests for <what>: cover the main scenarios and edge cases.',
       taskLabel: 'Task for the team',
       taskPlaceholder: 'For example: review the sync plugin and suggest three fixes',
       rolesLabel: 'Roles',
@@ -26,18 +39,29 @@ window.__ModuleLoader__.load({
       roleDoer: 'Doer — writes the code',
       roleChecker: 'Reviewer — checks the result',
       parallelLabel: 'Run in parallel',
-      build: 'Prepare request',
       copy: 'Copy',
       copied: 'Copied — paste it into the message field',
       clear: 'Clear',
       previewLabel: 'Ready request',
       previewEmpty: 'Describe the task above to see the request.',
       needTask: 'Add a task description first.',
+      historyLabel: 'Recent requests',
+      historyEmpty: 'Copied requests appear here.',
     }
     const ru = {
       title: 'Команда',
       heading: 'Команда помощников',
-      hint: 'Опишите задачу и отметьте роли — панель соберёт готовое задание. Останется вставить его в поле ввода и отправить.',
+      hint: 'Выберите шаблон, опишите задачу и отметьте роли — панель соберёт готовое задание. Останется вставить его в поле ввода и отправить.',
+      templateLabel: 'Шаблон',
+      templateCustom: 'Своя задача',
+      templateReview: 'Ревью кода',
+      templateRefactor: 'Рефакторинг',
+      templateResearch: 'Исследование',
+      templateTests: 'Тесты',
+      reviewSeed: 'Проведи ревью кода в <путь>: найди ошибки и риски, предложи конкретные правки.',
+      refactorSeed: 'Отрефактори <что>: сохрани поведение, упрости структуру, прогони тесты.',
+      researchSeed: 'Исследуй <тему>: собери факты из кода и документации, выдели ключевые выводы.',
+      testsSeed: 'Напиши тесты для <что>: покрой основные сценарии и крайние случаи.',
       taskLabel: 'Задача для команды',
       taskPlaceholder: 'Например: проверь плагин синхронизации и предложи три исправления',
       rolesLabel: 'Роли',
@@ -45,17 +69,27 @@ window.__ModuleLoader__.load({
       roleDoer: 'Исполнитель — пишет код',
       roleChecker: 'Проверяющий — проверяет результат',
       parallelLabel: 'Запустить параллельно',
-      build: 'Собрать задание',
       copy: 'Скопировать',
       copied: 'Скопировано — вставьте в поле ввода',
       clear: 'Очистить',
       previewLabel: 'Готовое задание',
       previewEmpty: 'Опишите задачу выше, чтобы увидеть задание.',
       needTask: 'Сначала опишите задачу.',
+      historyLabel: 'Последние задания',
+      historyEmpty: 'Скопированные задания появятся здесь.',
     }
 
+    /** Шаблоны заданий: что подставить в поле и какие роли включить. */
+    const TEMPLATES = [
+      { id: 'custom', labelKey: 'templateCustom', seed: '', roles: { researcher: true, doer: true, checker: false }, parallel: true },
+      { id: 'review', labelKey: 'templateReview', seedKey: 'reviewSeed', roles: { researcher: true, doer: false, checker: true }, parallel: true },
+      { id: 'refactor', labelKey: 'templateRefactor', seedKey: 'refactorSeed', roles: { researcher: true, doer: true, checker: true }, parallel: false },
+      { id: 'research', labelKey: 'templateResearch', seedKey: 'researchSeed', roles: { researcher: true, doer: false, checker: false }, parallel: true },
+      { id: 'tests', labelKey: 'templateTests', seedKey: 'testsSeed', roles: { researcher: false, doer: true, checker: true }, parallel: false },
+    ]
+
     const S = {
-      card: { display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13 },
+      card: { display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13, maxWidth: 640 },
       label: { fontSize: 12, fontWeight: 600, opacity: 0.8 },
       area: {
         width: '100%',
@@ -69,6 +103,19 @@ window.__ModuleLoader__.load({
         font: 'inherit',
         fontSize: 13,
         resize: 'vertical',
+      },
+      select: {
+        width: '100%',
+        boxSizing: 'border-box',
+        height: 32,
+        padding: '0 8px',
+        borderRadius: 8,
+        border: '1px solid rgba(128,128,128,0.35)',
+        background: 'transparent',
+        color: 'inherit',
+        font: 'inherit',
+        fontSize: 13,
+        colorScheme: 'inherit',
       },
       row: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
       button: {
@@ -105,6 +152,17 @@ window.__ModuleLoader__.load({
         whiteSpace: 'pre-wrap',
         overflowWrap: 'anywhere',
       },
+      historyRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '5px 8px',
+        borderRadius: 8,
+        border: '1px solid rgba(128,128,128,0.22)',
+        background: 'rgba(128,128,128,0.05)',
+        cursor: 'pointer',
+        fontSize: 12,
+      },
     }
 
     let translate = (key) => key
@@ -131,14 +189,43 @@ window.__ModuleLoader__.load({
       return lines.join('\n')
     }
 
+    function readHistory() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]')
+        return Array.isArray(parsed) ? parsed.slice(0, HISTORY_LIMIT) : []
+      } catch {
+        return []
+      }
+    }
+
+    function writeHistory(entries) {
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, HISTORY_LIMIT)))
+      } catch {
+        // без хранилища история живёт до перезагрузки
+      }
+    }
+
     function TeamCard() {
       const t = (key) => translate(key)
+      const [template, setTemplate] = React.useState('custom')
       const [task, setTask] = React.useState('')
-      const [roles, setRoles] = React.useState({ researcher: true, doer: true, checker: false })
+      const [roles, setRoles] = React.useState(TEMPLATES[0].roles)
       const [parallel, setParallel] = React.useState(true)
       const [notice, setNotice] = React.useState('')
+      const [history, setHistory] = React.useState(() => readHistory())
 
       const prepared = task.trim() === '' ? '' : buildRequest({ task, roles, parallel })
+
+      const chooseTemplate = (id) => {
+        setTemplate(id)
+        const found = TEMPLATES.find((item) => item.id === id) ?? TEMPLATES[0]
+        setRoles(found.roles)
+        setParallel(found.parallel)
+        if (found.seedKey !== undefined) setTask(t(found.seedKey))
+        else if (id === 'custom') setTask('')
+        setNotice('')
+      }
 
       const toggleRole = (name) => setRoles((current) => ({ ...current, [name]: !current[name] }))
 
@@ -149,10 +236,22 @@ window.__ModuleLoader__.load({
         }
         try {
           await navigator.clipboard.writeText(prepared)
-          setNotice(t('copied'))
         } catch {
-          setNotice(t('copied'))
+          // буфер может быть недоступен — текст всё равно виден в предпросмотре
         }
+        const entry = { task, roles, parallel, at: new Date().toISOString() }
+        const next = [entry, ...history.filter((item) => item.task !== task)].slice(0, HISTORY_LIMIT)
+        setHistory(next)
+        writeHistory(next)
+        setNotice(t('copied'))
+      }
+
+      const restore = (entry) => {
+        setTask(entry.task)
+        setRoles(entry.roles)
+        setParallel(entry.parallel)
+        setTemplate('custom')
+        setNotice('')
       }
 
       const checkbox = (checked, onChange, label) =>
@@ -168,6 +267,16 @@ window.__ModuleLoader__.load({
         { style: S.card },
         h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, t('heading')),
         h('span', { style: { fontSize: 12, opacity: 0.75, lineHeight: 1.5 } }, t('hint')),
+        h('span', { style: S.label }, t('templateLabel')),
+        h(
+          'select',
+          {
+            style: S.select,
+            value: template,
+            onChange: (event) => chooseTemplate(event.target.value),
+          },
+          ...TEMPLATES.map((item) => h('option', { key: item.id, value: item.id }, t(item.labelKey))),
+        ),
         h('span', { style: S.label }, t('taskLabel')),
         h('textarea', {
           style: S.area,
@@ -199,6 +308,26 @@ window.__ModuleLoader__.load({
         ),
         h('span', { style: S.label }, t('previewLabel')),
         h('pre', { style: S.pre }, prepared === '' ? t('previewEmpty') : prepared),
+        h('span', { style: S.label }, t('historyLabel')),
+        history.length === 0
+          ? h('span', { style: { fontSize: 12, opacity: 0.7 } }, t('historyEmpty'))
+          : h(
+              'div',
+              { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+              ...history.map((entry, index) =>
+                h(
+                  'div',
+                  {
+                    key: `${entry.at}-${index}`,
+                    style: S.historyRow,
+                    onClick: () => restore(entry),
+                    title: entry.task,
+                  },
+                  h('span', { style: { fontSize: 11, opacity: 0.6, flex: '0 0 auto' } }, entry.at.slice(11, 16)),
+                  h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, entry.task),
+                ),
+              ),
+            ),
       )
     }
 
@@ -228,6 +357,7 @@ window.__ModuleLoader__.load({
     exports.inject = ['slots', 'locale']
     exports.NS = NS
     exports.buildRequest = buildRequest
+    exports.TEMPLATES = TEMPLATES
     return module.exports
   },
 })

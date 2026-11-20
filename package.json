@@ -1,21 +1,44 @@
 {
   "name": "dsh-team",
-  "version": "1.0.0",
-  "description": "Панель «Команда»: соберите задание для нескольких помощников — роли, параллельность, готовый текст для отправки в чат",
+  "version": "1.1.0",
+  "description": "Панель «Команда»: шаблоны заданий, роли, параллельность и готовый текст для отправки в чат",
   "type": "module",
   "license": "MIT",
-  "keywords": ["dsh", "dsh-plugin", "deepseek-harness", "agents", "subagents", "team"],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "agents",
+    "subagents",
+    "team"
+  ],
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
-  "files": ["index.js", "client.js", "cordis.patch.yml", "locale", "docs", "icon.svg", "README.md", "LICENSE", "test"],
-  "engines": { "node": ">=22.15" },
-  "scripts": { "test": "node test/smoke.mjs" },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale",
+    "docs",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "test"
+  ],
+  "engines": {
+    "node": ">=22.15"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs"
+  },
   "dsh": {
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "immediately": true,
