@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Team",
+    "description": "Team panel: describe the task and pick roles — the plugin prepares a ready request for several assistants.",
+    "detail": "docs/DETAIL.md"
+  }
+}
