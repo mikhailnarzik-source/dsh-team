@@ -215,7 +215,7 @@ window.__ModuleLoader__.load({
       const [template, setTemplate] = React.useState('custom')
       const [task, setTask] = React.useState('')
       const [roles, setRoles] = React.useState(TEMPLATES[0].roles)
-      const [parallel, setParallel] = React.useState(true)
+      const [parallel, setParallel] = React.useState(false)
       const [notice, setNotice] = React.useState('')
       const [history, setHistory] = React.useState(() => readHistory())
       // По умолчанию карточка свёрнута: в списке плагинов она не должна
@@ -264,14 +264,21 @@ window.__ModuleLoader__.load({
       if (!open) {
         return h(
           'div',
-          { style: S.card },
-          h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, t('heading')),
-          h('span', { style: { fontSize: 12, opacity: 0.7, lineHeight: 1.5 } }, t('hint')),
-          h(
-            'div',
-            { style: S.row },
-            h('button', { style: S.primary, onClick: () => setOpen(true) }, t('open')),
-          ),
+          {
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '6px 10px',
+              borderRadius: 8,
+              border: '1px solid rgba(128,128,128,0.22)',
+              background: 'rgba(128,128,128,0.05)',
+              fontSize: 13,
+            },
+          },
+          h('span', { style: { fontWeight: 600 } }, t('heading')),
+          h('span', { style: { fontSize: 12, opacity: 0.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, t('hint')),
+          h('button', { style: { ...S.primary, marginLeft: 'auto', flex: '0 0 auto' }, onClick: () => setOpen(true) }, t('open')),
         )
       }
 
