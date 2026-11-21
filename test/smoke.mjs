@@ -36,7 +36,7 @@ const ctx = {
   },
   slots: {
     inject: (name, register) => {
-      assert.equal(name, 'plugins.item')
+      assert.equal(name, 'plugins.detail.section')
       register()
     },
     register: (options, component) => registrations.push({ options, component }),
@@ -45,10 +45,10 @@ const ctx = {
 
 exported.apply(ctx)
 assert.equal(registrations.length, 1)
-assert.equal(registrations[0].options.name, 'plugins.item')
+assert.equal(registrations[0].options.name, 'plugins.detail.section')
 
 // Карточка обёрнута в рамку: разворачиваем её и проверяем содержимое.
-const wrapper = registrations[0].component({})
+const wrapper = registrations[0].component({ subject: { kind: 'bundle', pkg: { name: 'dsh-team' } } })
 assert.equal(typeof wrapper.type, 'function')
 const card = wrapper.type({ ...(wrapper.props ?? {}), children: wrapper.children })
 assert.equal(card.type, 'div')

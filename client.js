@@ -437,23 +437,40 @@ function TeamCard() {
       )
     }
 
+    /** Содержимое карточки на странице своего плагина. */
+    function DetailCard_dshteam(props) {
+      const subject = props?.subject
+      const packageName =
+        subject?.kind === 'bundle' && typeof subject?.pkg?.name === 'string'
+          ? subject.pkg.name
+          : typeof subject?.id === 'string'
+            ? subject.id
+            : ''
+      if (packageName !== 'dsh-team') return null
+      const content = () => h(CardFrame, null, h(TeamCard))
+      return typeof content === 'function' ? content(props) : content
+    }
+
     function apply(ctx) {
       ctx.locale.register(NS, { en, ru })
       translate = ctx.locale.bind(NS)
 
       try {
-        ctx.slots.inject('plugins.item', () =>
+              try {
+        ctx.slots.inject('plugins.detail.section', () =>
           ctx.slots.register(
             {
-              name: 'plugins.item',
-              id: 'dsh-team',
-              order: 58,
-              label: () => translate('title'),
+              name: 'plugins.detail.section',
+              id: 'dsh-team-detail',
+              order: 45,
               locale: NS,
             },
-            () => h(CardFrame, null, h(TeamCard)),
+            DetailCard_dshteam,
           ),
         )
+      } catch (error) {
+        console.error('[dsh-team] секция страницы недоступна:', error)
+      }
       } catch (error) {
         console.error('[dsh-team] карточка недоступна:', error)
       }
