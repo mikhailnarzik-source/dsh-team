@@ -93,7 +93,7 @@ window.__ModuleLoader__.load({
     ]
 
     const S = {
-      card: { position: 'relative', paddingRight: 44, display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13, maxWidth: 640 },
+      card: { display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13, maxWidth: 640 },
       label: { fontSize: 12, fontWeight: 600, opacity: 0.8 },
       area: {
         width: '100%',
@@ -216,10 +216,11 @@ window.__ModuleLoader__.load({
         'div',
         {
           style: {
+            position: 'relative',
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
-            padding: '10px 12px',
+            padding: '10px 44px 12px 12px',
             borderRadius: 10,
             border: '1px solid rgba(128,128,128,0.28)',
             background: 'rgba(128,128,128,0.07)',
