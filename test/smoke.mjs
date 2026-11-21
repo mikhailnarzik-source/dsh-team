@@ -47,7 +47,10 @@ exported.apply(ctx)
 assert.equal(registrations.length, 1)
 assert.equal(registrations[0].options.name, 'plugins.item')
 
-const card = registrations[0].component({})
+// Карточка обёрнута в рамку: разворачиваем её и проверяем содержимое.
+const wrapper = registrations[0].component({})
+assert.equal(typeof wrapper.type, 'function')
+const card = wrapper.type({ ...(wrapper.props ?? {}), children: wrapper.children })
 assert.equal(card.type, 'div')
 
 // сборка задания: все роли

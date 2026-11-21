@@ -210,7 +210,27 @@ window.__ModuleLoader__.load({
       }
     }
 
-    function TeamCard() {
+        /** Рамка карточки: тот же вид, что у остальных наших плагинов. */
+    function CardFrame({ children }) {
+      return h(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            padding: '10px 12px',
+            borderRadius: 10,
+            border: '1px solid rgba(128,128,128,0.28)',
+            background: 'rgba(128,128,128,0.07)',
+            boxSizing: 'border-box',
+          },
+        },
+        children,
+      )
+    }
+
+function TeamCard() {
       const t = (key) => translate(key)
       const [template, setTemplate] = React.useState('custom')
       const [task, setTask] = React.useState('')
@@ -374,7 +394,7 @@ window.__ModuleLoader__.load({
               label: () => translate('title'),
               locale: NS,
             },
-            TeamCard,
+            () => h(CardFrame, null, h(TeamCard)),
           ),
         )
       } catch (error) {
