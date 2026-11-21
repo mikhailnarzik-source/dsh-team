@@ -359,9 +359,14 @@ function TeamCard() {
         )
 
       return h(
+      'div',
+      { style: S.card },
+      h(
         'div',
-        { style: S.card },
+        { style: { display: 'flex', alignItems: 'center', gap: 10 } },
         h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, t('heading')),
+        h(ToggleIcon, { open: true, onClick: () => setOpen(false) }),
+      ),
         h('span', { style: { fontSize: 12, opacity: 0.75, lineHeight: 1.5 } }, t('hint')),
         h('span', { style: S.label }, t('templateLabel')),
         h(
@@ -389,7 +394,6 @@ function TeamCard() {
           'div',
           { style: S.row },
           h('button', { style: S.primary, onClick: () => void copy() }, t('copy')),
-h(ToggleIcon, { open: true, onClick: () => setOpen(false) }),
           h(
             'button',
             {
