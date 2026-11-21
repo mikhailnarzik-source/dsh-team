@@ -242,7 +242,9 @@ window.__ModuleLoader__.load({
           'aria-expanded': open ? 'true' : 'false',
           style: {
             position: 'absolute',
-            top: 8,
+            // Свёрнутая карточка: по центру по вертикали. Развёрнутая: в углу.
+            top: open ? 8 : '50%',
+            transform: open ? 'none' : 'translateY(-50%)',
             right: 8,
             zIndex: 2,
             display: 'inline-flex',
