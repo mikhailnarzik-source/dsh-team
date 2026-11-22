@@ -5,6 +5,9 @@
  * готовый текст, который остаётся вставить в поле ввода. Сборка текста —
  * единственная задача плагина, поэтому здесь нет ни маршрутов, ни хранилища:
  * история последних заданий лежит в localStorage.
+ *
+ * Страница оформлена в общем стиле: центрированный контейнер 960, шапка с
+ * иконкой, чипом порядка запуска и кнопкой «Обновить», карточки-секции.
  */
 window.__ModuleLoader__.load({
   id: 'dsh-team',
@@ -22,6 +25,9 @@ window.__ModuleLoader__.load({
       title: 'Team',
       heading: 'Team of assistants',
       hint: 'Pick a template, describe the task, choose the roles — the panel prepares a ready request. Paste it into the message field and send.',
+      refresh: 'Refresh',
+      chipParallel: 'In parallel',
+      chipSequential: 'One by one',
       templateLabel: 'Template',
       templateCustom: 'Own task',
       templateReview: 'Code review',
@@ -54,6 +60,9 @@ window.__ModuleLoader__.load({
       title: 'Команда',
       heading: 'Команда помощников',
       hint: 'Выберите шаблон, опишите задачу и отметьте роли — панель соберёт готовое задание. Останется вставить его в поле ввода и отправить.',
+      refresh: 'Обновить',
+      chipParallel: 'Параллельно',
+      chipSequential: 'По очереди',
       templateLabel: 'Шаблон',
       templateCustom: 'Своя задача',
       templateReview: 'Ревью кода',
@@ -92,82 +101,44 @@ window.__ModuleLoader__.load({
       { id: 'tests', labelKey: 'templateTests', seedKey: 'testsSeed', roles: { researcher: false, doer: true, checker: true }, parallel: false },
     ]
 
-    const S = {
-      card: { display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13, maxWidth: 640 },
-      label: { fontSize: 12, fontWeight: 600, opacity: 0.8 },
-      area: {
-        width: '100%',
-        boxSizing: 'border-box',
-        minHeight: 64,
-        padding: '8px 10px',
-        borderRadius: 8,
-        border: '1px solid rgba(128,128,128,0.35)',
-        background: 'transparent',
-        color: 'inherit',
-        font: 'inherit',
-        fontSize: 13,
-        resize: 'vertical',
-      },
-      select: {
-        width: '100%',
-        boxSizing: 'border-box',
-        height: 32,
-        padding: '0 8px',
-        borderRadius: 8,
-        border: '1px solid rgba(128,128,128,0.35)',
-        background: 'transparent',
-        color: 'inherit',
-        font: 'inherit',
-        fontSize: 13,
-        colorScheme: 'inherit',
-      },
-      row: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-      button: {
-        padding: '6px 14px',
-        borderRadius: 8,
-        border: '1px solid rgba(128,128,128,0.35)',
-        background: 'rgba(128,128,128,0.12)',
-        color: 'inherit',
-        font: 'inherit',
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: 'pointer',
-      },
-      primary: {
-        padding: '6px 14px',
-        borderRadius: 8,
-        border: '1px solid rgba(80,120,200,0.55)',
-        background: 'rgba(80,120,200,0.18)',
-        color: 'inherit',
-        font: 'inherit',
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: 'pointer',
-      },
-      pre: {
-        margin: 0,
-        padding: '10px 12px',
-        borderRadius: 10,
-        border: '1px solid rgba(128,128,128,0.28)',
-        background: 'rgba(128,128,128,0.07)',
-        fontFamily: 'inherit',
-        fontSize: 12.5,
-        lineHeight: 1.5,
-        whiteSpace: 'pre-wrap',
-        overflowWrap: 'anywhere',
-      },
-      historyRow: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '5px 8px',
-        borderRadius: 8,
-        border: '1px solid rgba(128,128,128,0.22)',
-        background: 'rgba(128,128,128,0.05)',
-        cursor: 'pointer',
-        fontSize: 12,
-      },
-    }
+    /** Общий каркас страницы и элементов управления. */
+    const CSS = `
+.dsh-team-page{width:100%;max-width:960px;margin:0 auto;padding:24px 28px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;line-height:20px}
+.dsh-team-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.dsh-team-head-icon{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;font-size:24px;line-height:1;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 18%, transparent);border:1px solid color-mix(in srgb, var(--dsw-alias-brand-primary) 34%, transparent)}
+.dsh-team-head-text{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dsh-team-head-title{margin:0;font-size:20px;font-weight:600;line-height:26px}
+.dsh-team-head-sub{margin:0;font-size:12.5px;font-weight:400;line-height:18px;color:var(--dsw-alias-label-secondary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dsh-team-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+.dsh-team-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;line-height:18px;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 12%, transparent);color:var(--dsw-alias-label-primary);white-space:nowrap}
+.dsh-team-chip-dot{width:8px;height:8px;border-radius:50%;background:var(--dsw-alias-brand-primary)}
+.dsh-team-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px}
+.dsh-team-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;min-width:0}
+.dsh-team-card-title{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:600;line-height:20px}
+.dsh-team-card-bar{flex:0 0 auto;width:3px;height:14px;border-radius:2px;background:var(--dsw-alias-brand-primary)}
+.dsh-team-label{font-size:12px;font-weight:600;color:var(--dsw-alias-label-secondary)}
+.dsh-team-select{box-sizing:border-box;width:100%;height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;color-scheme:inherit;cursor:pointer}
+.dsh-team-area{box-sizing:border-box;width:100%;min-height:92px;padding:8px 10px;border-radius:9px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;line-height:18px;resize:vertical}
+.dsh-team-select:focus-visible,.dsh-team-area:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}
+.dsh-team-checks{display:flex;flex-direction:column;gap:8px}
+.dsh-team-check{display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:18px;cursor:pointer}
+.dsh-team-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dsh-team-btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--dsw-alias-border-l4);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;font-weight:600;line-height:18px;cursor:pointer}
+.dsh-team-btn.is-primary{background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);color:#fff}
+.dsh-team-btn.is-small{height:32px;padding:0 12px;font-size:12px}
+.dsh-team-btn:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}
+.dsh-team-btn.is-primary:hover:not(:disabled){background:color-mix(in srgb, var(--dsw-alias-brand-primary) 86%, #fff)}
+.dsh-team-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
+.dsh-team-btn:disabled{opacity:.55;cursor:default}
+.dsh-team-pre{margin:0;padding:12px;border-radius:10px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);font-family:inherit;font-size:12.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--dsw-alias-label-primary)}
+.dsh-team-empty{margin:0;padding:10px 2px;text-align:center;color:var(--dsw-alias-label-tertiary);font-size:12.5px;line-height:18px}
+.dsh-team-history{display:flex;flex-direction:column;gap:4px}
+.dsh-team-history-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border-bottom:1px solid var(--dsw-alias-border-l1);font-size:12px;line-height:18px;cursor:pointer;background:transparent;text-align:left;color:var(--dsw-alias-label-primary);font-family:inherit}
+.dsh-team-history-row:last-child{border-bottom:0}
+.dsh-team-history-row:hover{background:color-mix(in srgb, var(--dsw-alias-label-primary) 5%, transparent)}
+.dsh-team-notice{font-size:12.5px;line-height:18px;color:var(--dsw-alias-label-secondary)}
+@media (max-width:760px){.dsh-team-page{padding:18px 16px 32px !important}.dsh-team-head-actions{margin-left:0;width:100%;justify-content:flex-start}}
+`
 
     let translate = (key) => key
 
@@ -210,80 +181,17 @@ window.__ModuleLoader__.load({
       }
     }
 
-        /** Рамка карточки: тот же вид, что у остальных наших плагинов. */
-    function CardFrame({ children }) {
+    /** Карточка-секция с акцентной полоской у заголовка. */
+    function Card({ title, className, children }) {
       return h(
-        'div',
-        {
-          style: {
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-            padding: '10px 44px 12px 12px',
-            borderRadius: 10,
-            border: '1px solid rgba(128,128,128,0.28)',
-            background: 'rgba(128,128,128,0.07)',
-            boxSizing: 'border-box',
-          },
-        },
+        'section',
+        { className: className === undefined ? 'dsh-team-card' : `dsh-team-card ${className}` },
+        h('h2', { className: 'dsh-team-card-title' }, h('span', { className: 'dsh-team-card-bar' }), title),
         children,
       )
     }
-    /** Кнопка-шеврон: развернуть и свернуть. Виден в любой теме (currentColor). */
-    function ToggleIcon({ open, onClick }) {
-      return h(
-        'button',
-        {
-          type: 'button',
-          onClick,
-          title: open ? 'Свернуть' : 'Открыть',
-          'aria-label': open ? 'Свернуть' : 'Открыть',
-          'aria-expanded': open ? 'true' : 'false',
-          style: {
-            position: 'absolute',
-            // Свёрнутая карточка: по центру по вертикали. Развёрнутая: в углу.
-            top: open ? 8 : '50%',
-            transform: open ? 'none' : 'translateY(-50%)',
-            right: 8,
-            zIndex: 2,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 28,
-            height: 28,
-            padding: 0,
-            borderRadius: 8,
-            border: '1px solid rgba(128,128,128,0.32)',
-            background: 'rgba(128,128,128,0.1)',
-            color: 'inherit',
-            cursor: 'pointer',
-          },
-        },
-        h(
-          'svg',
-          {
-            width: 16,
-            height: 16,
-            viewBox: '0 0 24 24',
-            fill: 'none',
-            'aria-hidden': 'true',
-            focusable: 'false',
-            style: { transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s ease' },
-          },
-          h('path', {
-            d: 'M6 15l6-6 6 6',
-            stroke: 'currentColor',
-            strokeWidth: 2,
-            strokeLinecap: 'round',
-            strokeLinejoin: 'round',
-          }),
-        ),
-      )
-    }
 
-
-function TeamCard() {
+    function TeamPage() {
       const t = (key) => translate(key)
       const [template, setTemplate] = React.useState('custom')
       const [task, setTask] = React.useState('')
@@ -291,9 +199,6 @@ function TeamCard() {
       const [parallel, setParallel] = React.useState(false)
       const [notice, setNotice] = React.useState('')
       const [history, setHistory] = React.useState(() => readHistory())
-      // По умолчанию карточка свёрнута: в списке плагинов она не должна
-      // занимать пол-экрана.
-      const [open, setOpen] = React.useState(false)
 
       const prepared = task.trim() === '' ? '' : buildRequest({ task, roles, parallel })
 
@@ -334,110 +239,149 @@ function TeamCard() {
         setNotice('')
       }
 
-      if (!open) {
-        return h(
-          'div',
-          {
-            style: {
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '6px 10px',
-              borderRadius: 8,
-              border: '1px solid rgba(128,128,128,0.22)',
-              background: 'rgba(128,128,128,0.05)',
-              fontSize: 13,
-            },
-          },
-          h('span', { style: { fontWeight: 600 } }, t('heading')),
-          h('span', { style: { fontSize: 12, opacity: 0.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, t('hint')),
-          h(ToggleIcon, { open: false, onClick: () => setOpen(true) }),
-        )
+      /** «Обновить»: перечитать историю из localStorage и сбросить сообщение. */
+      const refresh = () => {
+        setHistory(readHistory())
+        setNotice('')
       }
 
       const checkbox = (checked, onChange, label) =>
         h(
           'label',
-          { style: { display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' } },
+          { className: 'dsh-team-check' },
           h('input', { type: 'checkbox', checked, onChange: (event) => onChange(event.target.checked) }),
           h('span', null, label),
         )
 
       return h(
-      'div',
-      { style: S.card },
-      h(
         'div',
-        { style: { display: 'flex', alignItems: 'center', gap: 10 } },
-        h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, t('heading')),
-        h(ToggleIcon, { open: true, onClick: () => setOpen(false) }),
-      ),
-        h('span', { style: { fontSize: 12, opacity: 0.75, lineHeight: 1.5 } }, t('hint')),
-        h('span', { style: S.label }, t('templateLabel')),
+        {
+          className: 'dsh-team-page',
+          style: { width: '100%', maxWidth: 960, margin: '0 auto', padding: '24px 28px 40px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 16 },
+        },
+        h('style', null, CSS),
         h(
-          'select',
-          {
-            style: S.select,
-            value: template,
-            onChange: (event) => chooseTemplate(event.target.value),
-          },
-          ...TEMPLATES.map((item) => h('option', { key: item.id, value: item.id }, t(item.labelKey))),
+          'header',
+          { className: 'dsh-team-head' },
+          h('span', { className: 'dsh-team-head-icon', 'aria-hidden': 'true' }, '👥'),
+          h(
+            'div',
+            { className: 'dsh-team-head-text' },
+            h('h1', { className: 'dsh-team-head-title' }, t('heading')),
+            h('p', { className: 'dsh-team-head-sub' }, t('hint')),
+          ),
+          h(
+            'div',
+            { className: 'dsh-team-head-actions' },
+            h(
+              'span',
+              { className: 'dsh-team-chip', role: 'status' },
+              h('span', { className: 'dsh-team-chip-dot' }),
+              parallel ? t('chipParallel') : t('chipSequential'),
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'dsh-team-btn is-small', onClick: refresh },
+              t('refresh'),
+            ),
+          ),
         ),
-        h('span', { style: S.label }, t('taskLabel')),
-        h('textarea', {
-          style: S.area,
-          placeholder: t('taskPlaceholder'),
-          value: task,
-          onChange: (event) => setTask(event.target.value),
-        }),
-        h('span', { style: S.label }, t('rolesLabel')),
-        checkbox(roles.researcher, () => toggleRole('researcher'), t('roleResearcher')),
-        checkbox(roles.doer, () => toggleRole('doer'), t('roleDoer')),
-        checkbox(roles.checker, () => toggleRole('checker'), t('roleChecker')),
-        checkbox(parallel, setParallel, t('parallelLabel')),
         h(
           'div',
-          { style: S.row },
-          h('button', { style: S.primary, onClick: () => void copy() }, t('copy')),
+          { className: 'dsh-team-grid' },
           h(
-            'button',
-            {
-              style: S.button,
-              onClick: () => {
-                setTask('')
-                setNotice('')
+            Card,
+            { title: t('templateLabel') },
+            h(
+              'select',
+              {
+                className: 'dsh-team-select',
+                value: template,
+                'aria-label': t('templateLabel'),
+                onChange: (event) => chooseTemplate(event.target.value),
               },
-            },
-            t('clear'),
+              ...TEMPLATES.map((item) => h('option', { key: item.id, value: item.id }, t(item.labelKey))),
+            ),
           ),
-          notice !== '' ? h('span', { style: { fontSize: 12, opacity: 0.75 } }, notice) : null,
-        ),
-        h('span', { style: S.label }, t('previewLabel')),
-        h('pre', { style: S.pre }, prepared === '' ? t('previewEmpty') : prepared),
-        h('span', { style: S.label }, t('historyLabel')),
-        history.length === 0
-          ? h('span', { style: { fontSize: 12, opacity: 0.7 } }, t('historyEmpty'))
-          : h(
+          h(
+            Card,
+            { title: t('rolesLabel') },
+            h(
               'div',
-              { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-              ...history.map((entry, index) =>
-                h(
-                  'div',
-                  {
-                    key: `${entry.at}-${index}`,
-                    style: S.historyRow,
-                    onClick: () => restore(entry),
-                    title: entry.task,
-                  },
-                  h('span', { style: { fontSize: 11, opacity: 0.6, flex: '0 0 auto' } }, entry.at.slice(11, 16)),
-                  h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, entry.task),
+              { className: 'dsh-team-checks' },
+              checkbox(roles.researcher, () => toggleRole('researcher'), t('roleResearcher')),
+              checkbox(roles.doer, () => toggleRole('doer'), t('roleDoer')),
+              checkbox(roles.checker, () => toggleRole('checker'), t('roleChecker')),
+            ),
+          ),
+        ),
+        h(
+          Card,
+          { title: t('taskLabel') },
+          h('textarea', {
+            className: 'dsh-team-area',
+            placeholder: t('taskPlaceholder'),
+            'aria-label': t('taskLabel'),
+            value: task,
+            onChange: (event) => setTask(event.target.value),
+          }),
+          h(
+            'div',
+            { className: 'dsh-team-checks' },
+            checkbox(parallel, setParallel, t('parallelLabel')),
+          ),
+        ),
+        h(
+          Card,
+          { title: t('previewLabel') },
+          h('pre', { className: 'dsh-team-pre' }, prepared === '' ? t('previewEmpty') : prepared),
+          h(
+            'div',
+            { className: 'dsh-team-row' },
+            h('button', { type: 'button', className: 'dsh-team-btn is-primary', onClick: () => void copy() }, t('copy')),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'dsh-team-btn',
+                onClick: () => {
+                  setTask('')
+                  setNotice('')
+                },
+              },
+              t('clear'),
+            ),
+            notice !== '' ? h('span', { className: 'dsh-team-notice' }, notice) : null,
+          ),
+        ),
+        h(
+          Card,
+          { title: t('historyLabel') },
+          history.length === 0
+            ? h('p', { className: 'dsh-team-empty' }, t('historyEmpty'))
+            : h(
+                'div',
+                { className: 'dsh-team-history' },
+                ...history.map((entry, index) =>
+                  h(
+                    'button',
+                    {
+                      key: `${entry.at}-${index}`,
+                      type: 'button',
+                      className: 'dsh-team-history-row',
+                      onClick: () => restore(entry),
+                      title: entry.task,
+                    },
+                    h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)', flex: '0 0 auto' } }, entry.at.slice(11, 16)),
+                    h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, entry.task),
+                  ),
                 ),
               ),
-            ),
+        ),
       )
     }
 
-    /** Содержимое карточки на странице своего плагина. */
+    /** Содержимое страницы своего плагина. */
     function DetailCard_dshteam(props) {
       const subject = props?.subject
       const packageName =
@@ -447,8 +391,7 @@ function TeamCard() {
             ? subject.id
             : ''
       if (packageName !== 'dsh-team') return null
-      const content = () => h(CardFrame, null, h(TeamCard))
-      return typeof content === 'function' ? content(props) : content
+      return h(TeamPage)
     }
 
     function apply(ctx) {
@@ -456,7 +399,6 @@ function TeamCard() {
       translate = ctx.locale.bind(NS)
 
       try {
-              try {
         ctx.slots.inject('plugins.detail.section', () =>
           ctx.slots.register(
             {
@@ -470,9 +412,6 @@ function TeamCard() {
         )
       } catch (error) {
         console.error('[dsh-team] секция страницы недоступна:', error)
-      }
-      } catch (error) {
-        console.error('[dsh-team] карточка недоступна:', error)
       }
     }
 
