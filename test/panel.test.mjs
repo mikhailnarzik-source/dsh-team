@@ -265,5 +265,5 @@ test('выгрузка плагина снимает слушатель и ст�
 })
 
 test('версия поднята на +0.0.1', () => {
-  assert.equal(PACKAGE.version, '1.1.17')
+  assert.equal(PACKAGE.version, '1.1.18')
 })

@@ -156,9 +156,20 @@ assert.match(css, /margin-top:auto/, 'футер карточки прижат �
 // Итерация 3: адаптив по высоте — страница сжимается, список истории ограничен.
 assert.match(css, /\.dsh-team-page\{[^}]*min-height:0[^}]*max-height:100%[^}]*overflow-y:auto/)
 assert.match(css, /\.dsh-team-page\{[^}]*padding-bottom:24px/)
-assert.match(css, /\.dsh-team-history\{[^}]*max-height:160px[^}]*overflow-y:auto/)
+assert.match(css, /\.dsh-team-history\{[^}]*max-height:200px[^}]*overflow-y:auto/)
 assert.match(css, /\.dsh-team-area\{[^}]*min-height:80px[^}]*max-height:220px/)
 assert.match(css, /\.dsh-team-pre\{[^}]*max-height:200px[^}]*overflow-y:auto/)
+// Итерация 4: строки-карточки истории, чип-кнопка и адаптив 480 px.
+assert.match(css, /\.dsh-team-history-row\{[^}]*display:flex[^}]*padding:10px 12px[^}]*border-bottom:1px solid var\(--dsw-alias-border-l1\)[^}]*border-radius:10px/)
+assert.match(css, /\.dsh-team-history-time\{flex:0 0 44px;width:44px;[^}]*font-size:12px;font-weight:600/)
+assert.match(css, /\.dsh-team-history-text\{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap/)
+assert.match(css, /\.dsh-team-history-empty-icon\{[^}]*width:32px;height:32px/)
+assert.match(css, /\.dsh-team-chip\{[^}]*height:32px[^}]*border-radius:10px[^}]*border:1px solid/)
+assert.match(css, /@media \(max-width:480px\)/)
+const empty = find(page, (element) => element.props.className === 'dsh-team-history-empty')[0]
+assert.ok(empty !== undefined, 'пустое состояние истории с иконкой')
+assert.equal(texts(find(empty, (element) => element.props.className === 'dsh-team-history-empty-icon')[0]).join(''), '🕘')
+assert.equal(texts(find(empty, (element) => element.props.className === 'dsh-team-history-empty-text')[0]).join(''), 'dshTeam.historyEmpty')
 
 const refresh = find(page, (element) => element.type === 'button' && texts(element).join('') === 'dshTeam.refresh')[0]
 assert.ok(refresh !== undefined, 'кнопка «Обновить»')

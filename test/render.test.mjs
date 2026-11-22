@@ -1,16 +1,18 @@
 /**
- * Проверки рендера страницы «Команда»: адаптив по высоте и по ширине.
+ * Проверки рендера страницы «Команда»: история, кнопки-чипы, адаптив.
  *
- * Контекст: на странице плагина карточка «Последние задания» и поле задачи
- * уходили за нижний край окна — страница не умела сжиматься в контейнере и
- * росла вместе с историей. Эти тесты фиксируют исправление:
- *  - страница — flex-колонка с min-height:0 и нижним отступом 24 px;
- *  - список последних заданий ограничен 160 px и прокручивается сам;
- *  - поле задачи — resize:vertical, 80…220 px;
+ * Контекст: блок «Последние задания» был тесной строкой с обрезанным текстом,
+ * а чип порядка запуска — пилюлей. Эти тесты фиксируют текущий вид:
+ *  - история — список строк-карточек 10/12 с временем 44 px и текстом в одну
+ *    строку с ellipsis и title, высота списка до 200 px со скроллом;
+ *  - пустая история — состояние с иконкой и подсказкой;
+ *  - чип «Параллельно»/«По очереди» — по виду кнопка 32 px, radius 10, рамка,
+ *    мягкая заливка и точка (не пилюля 999 px);
+ *  - кнопки — единая система v2: 36/32 px, radius 10;
  *  - ничего не выходит за экран на 1280/1024/768/480 px.
  *
- * `client.js` исполняется в vm с поддельным window.__ModuleLoader__ и
- * минимальным React — разметка и CSS проверяются без браузера.
+ * `client.js` исполняется в vm с поддельным window.__ModuleLoader__,
+ * минимальным React и localStorage — разметка и CSS проверяются без браузера.
  */
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -19,6 +21,33 @@ import vm from 'node:vm'
 
 const SOURCE = await readFile(new URL('../client.js', import.meta.url), 'utf8')
 const PACKAGE = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
+
+/** Пример истории: две записи с разным временем и длинным текстом. */
+const HISTORY = [
+  {
+    task: 'Проведи ревью кода в src/plugins/sync: найди ошибки и риски, предложи конкретные правки.',
+    roles: { researcher: true, doer: false, checker: true },
+    parallel: true,
+    at: '2026-11-22T09:05:00.000Z',
+  },
+  {
+    task: 'Напиши тесты для сборки задания: покрой основные сценарии и крайние случаи.',
+    roles: { researcher: false, doer: true, checker: true },
+    parallel: false,
+    at: '2026-11-21T18:42:00.000Z',
+  },
+]
+
+/** Хранилище под localStorage: история лежит в ключе `dsh-team:history`. */
+function makeStorage(entries) {
+  const map = new Map()
+  if (entries !== undefined) map.set('dsh-team:history', JSON.stringify(entries))
+  return {
+    getItem: (key) => (map.has(key) ? map.get(key) : null),
+    setItem: (key, value) => map.set(key, String(value)),
+    removeItem: (key) => map.delete(key),
+  }
+}
 
 /** Поддельный React: хуки отдают начальные значения и ничего не делают. */
 function makeReact() {
@@ -43,10 +72,12 @@ function makeReact() {
 }
 
 /** Загрузить client.js и отрисовать страницу плагина в простое дерево. */
-function renderPage() {
+function renderPage(historyEntries) {
   let registration
+  const storage = makeStorage(historyEntries)
   const sandbox = {
-    window: { __ModuleLoader__: { load(options) { registration = options } } },
+    window: { __ModuleLoader__: { load(options) { registration = options } }, localStorage: storage },
+    localStorage: storage,
     console,
   }
   vm.runInNewContext(SOURCE, sandbox, { filename: 'client.js' })
@@ -137,12 +168,93 @@ test('страница — flex-колонка, сжимается в конте
   assert.doesNotMatch(css, /\.dsh-team-page\{[^}]*height:100vh/, 'страница не привязана к 100vh')
 })
 
-test('«Последние задания»: список не выше 160 px и прокручивается сам', () => {
-  assert.match(css, /\.dsh-team-history\{[^}]*max-height:160px[^}]*overflow-y:auto/, 'max-height:160px + overflow-y:auto')
+test('«Последние задания»: список не выше 200 px и прокручивается сам', () => {
+  assert.match(css, /\.dsh-team-history\{[^}]*max-height:200px[^}]*overflow-y:auto/, 'max-height:200px + overflow-y:auto')
   assert.match(css, /\.dsh-team-history\{[^}]*min-height:0/, 'у списка min-height:0')
   assert.match(css, /\.dsh-team-history\{[^}]*scrollbar-width:thin/, 'тонкий скроллбар')
   assert.match(css, /::-webkit-scrollbar\{width:6px;height:6px\}/, 'тонкий webkit-скроллбар')
   assert.match(css, /::-webkit-scrollbar-thumb\{[^}]*border-radius:999px/, 'скруглённый ползунок')
+})
+
+test('строка истории — карточка: время 44 px secondary 600, текст в одну строку с ellipsis', () => {
+  const historyPage = renderPage(HISTORY)
+  const rows = findAll(historyPage, (element) => element.props?.className === 'dsh-team-history-row')
+  assert.equal(rows.length, HISTORY.length, 'по строке на запись истории')
+
+  assert.match(css, /\.dsh-team-history-row\{[^}]*display:flex[^}]*align-items:center[^}]*padding:10px 12px[^}]*border-radius:10px/, 'строка — flex-карточка 10/12 с радиусом 10')
+  assert.match(css, /\.dsh-team-history-row\{[^}]*border-bottom:1px solid var\(--dsw-alias-border-l1\)/, 'между строками разделитель')
+  assert.match(css, /\.dsh-team-history-row:hover\{background:color-mix\(in srgb, var\(--dsw-alias-label-primary\) 5%/, 'hover-фон строки')
+  assert.match(
+    css,
+    /\.dsh-team-history-time\{flex:0 0 44px;width:44px;[^}]*font-size:12px;font-weight:600;[^}]*color:var\(--dsw-alias-label-secondary\)/,
+    'время: фиксированные 44 px, 12/600, secondary',
+  )
+  assert.match(
+    css,
+    /\.dsh-team-history-text\{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap/,
+    'текст тянется, обрезается в одну строку',
+  )
+
+  for (const [index, row] of rows.entries()) {
+    const entry = HISTORY[index]
+    assert.equal(row.type, 'button', 'строка кликабельна кнопкой')
+    assert.equal(row.props.style, undefined, 'строка оформлена классом, а не inline-стилями')
+    assert.equal(row.props.title, entry.task, 'полный текст в title')
+    const time = row.children.find((child) => child?.props?.className === 'dsh-team-history-time')
+    const text = row.children.find((child) => child?.props?.className === 'dsh-team-history-text')
+    assert.ok(time, 'есть колонка времени')
+    assert.ok(text, 'есть колонка текста')
+    const date = new Date(entry.at)
+    const expected = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+    assert.equal(textsOf(time).join(''), expected, 'время в локальной зоне')
+    assert.equal(textsOf(text).join(''), entry.task, 'текст целиком в разметке, обрезка — в CSS')
+    assert.equal(text.props.style, undefined, 'обрезка не inline-стилями')
+  }
+
+  const container = findAll(historyPage, (element) => element.props?.className === 'dsh-team-history')[0]
+  assert.ok(container, 'контейнер списка истории')
+})
+
+test('пустая история: состояние с иконкой и подсказкой', () => {
+  const emptyPage = renderPage([])
+  const empty = findAll(emptyPage, (element) => element.props?.className === 'dsh-team-history-empty')[0]
+  assert.ok(empty, 'пустое состояние истории')
+  const icon = findAll(empty, (element) => element.props?.className === 'dsh-team-history-empty-icon')[0]
+  assert.ok(icon, 'иконка пустого состояния')
+  assert.equal(textsOf(icon).join(''), '🕘')
+  const hint = findAll(empty, (element) => element.props?.className === 'dsh-team-history-empty-text')[0]
+  assert.equal(textsOf(hint).join(''), 't:historyEmpty')
+  assert.equal(findAll(emptyPage, (element) => element.props?.className === 'dsh-team-history').length, 0, 'пустой список не рисуется')
+
+  assert.match(css, /\.dsh-team-history-empty\{[^}]*border:1px dashed var\(--dsw-alias-border-l2\)[^}]*border-radius:10px[^}]*text-align:center/)
+  assert.match(css, /\.dsh-team-history-empty-icon\{[^}]*width:32px;height:32px/, 'иконка 32 px')
+  assert.match(css, /\.dsh-team-history-empty-text\{[^}]*color:var\(--dsw-alias-label-secondary\)/)
+})
+
+test('чип порядка запуска — по виду кнопка 32 px, radius 10, рамка, мягкая заливка, точка', () => {
+  assert.match(
+    css,
+    /\.dsh-team-chip\{[^}]*display:inline-flex[^}]*align-items:center[^}]*height:32px[^}]*padding:0 12px[^}]*border-radius:10px/,
+    'чип-кнопка 32 px с радиусом 10',
+  )
+  assert.match(
+    css,
+    /\.dsh-team-chip\{[^}]*border:1px solid color-mix\(in srgb, var\(--dsw-alias-brand-primary\) 40%, transparent\)/,
+    'у чипа есть рамка',
+  )
+  assert.match(
+    css,
+    /\.dsh-team-chip\{[^}]*background:color-mix\(in srgb, var\(--dsw-alias-brand-primary\) 12%, transparent\)/,
+    'мягкая заливка чипа',
+  )
+  assert.match(css, /\.dsh-team-chip-dot\{[^}]*width:8px;height:8px;border-radius:50%/, 'точка чипа')
+  assert.doesNotMatch(css, /\.dsh-team-chip\{[^}]*border-radius:999px/, 'чип не пилюля')
+
+  const chip = findAll(page, (element) => element.props?.className === 'dsh-team-chip')[0]
+  assert.ok(chip, 'чип статуса на странице')
+  assert.equal(chip.props.role, 'status')
+  assert.ok(findAll(chip, (element) => element.props?.className === 'dsh-team-chip-dot')[0], 'точка внутри чипа')
+  assert.equal(textsOf(chip).join(''), 't:chipSequential')
 })
 
 test('поле задачи: resize:vertical, min-height 80 и max-height 220', () => {
@@ -163,8 +275,13 @@ test('адаптив по ширине: 1280/1024/768/480 без горизон�
   assert.match(css, /\.dsh-team-grid\{[^}]*repeat\(auto-fit, minmax\(min\(100%, 280px\), 1fr\)\)/)
   assert.match(css, /@media \(max-width:900px\)\{\.dsh-team-grid\{grid-template-columns:1fr\}\}/, 'на 900 px — одна колонка')
   assert.match(css, /@media \(max-width:640px\)\{\.dsh-team-page\{padding:18px 16px !important;padding-bottom:24px !important\}/, 'на 640 px — компактные отступы и низ 24 px')
+  assert.match(css, /@media \(max-width:480px\)\{\.dsh-team-page\{padding:14px 12px !important;padding-bottom:20px !important\}/, 'на 480 px — ещё компактнее')
+  assert.match(css, /@media \(max-width:480px\)\{[^@]*\.dsh-team-btn\{width:100%/, 'на 480 px кнопки на всю строку')
+  assert.match(css, /@media \(max-width:480px\)\{[^@]*\.dsh-team-history-time\{flex-basis:40px;width:40px/, 'на 480 px колонка времени уже')
   assert.match(css, /\.dsh-team-card\{[^}]*min-width:0/, 'карточки сжимаются')
   assert.match(css, /\.dsh-team-btn\{[^}]*max-width:100%/, 'кнопки не шире строки')
+  assert.match(css, /\.dsh-team-history-row\{[^}]*box-sizing:border-box[^}]*width:100%/, 'строка истории не шире контейнера')
+  assert.match(css, /\.dsh-team-history-text\{[^}]*min-width:0/, 'текст истории сжимается в ellipsis')
   assert.doesNotMatch(css, /(?<![-a-z])width:\s*\d{3,}px/, 'нет фиксированных ширин больше 300 px')
 })
 
@@ -185,5 +302,5 @@ test('кнопки: единая система из спеки v2', () => {
 
 test('версия плагина поднята на +0.0.1', () => {
   assert.match(PACKAGE.version, /^\d+\.\d+\.\d+$/)
-  assert.equal(PACKAGE.version, '1.1.17')
+  assert.equal(PACKAGE.version, '1.1.18')
 })
