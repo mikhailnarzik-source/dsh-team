@@ -109,8 +109,11 @@ assert.equal(page.type, 'div')
 assert.equal(page.props.className, 'dsh-team-page')
 assert.equal(page.props.style.maxWidth, 960)
 assert.equal(page.props.style.margin, '0 auto')
-assert.equal(page.props.style.padding, '24px 28px 40px')
+assert.equal(page.props.style.padding, '24px 28px')
+assert.equal(page.props.style.paddingBottom, 24)
 assert.equal(page.props.style.flexDirection, 'column')
+assert.equal(page.props.style.minHeight, 0)
+assert.equal(page.props.style.overflowY, 'auto')
 
 // Шапка: иконка 52, заголовок, подзаголовок, чип и «Обновить».
 const header = find(page, (element) => element.props.className === 'dsh-team-head')[0]
@@ -141,6 +144,12 @@ assert.match(css, /\.dsh-team-btn\.is-small\{height:32px\}/)
 assert.doesNotMatch(css, /color:#fff/, 'нет белого текста на заливке brand')
 assert.match(css, /minmax\(min\(100%, 280px\), 1fr\)/)
 assert.match(css, /margin-top:auto/, 'футер карточки прижат к низу')
+// Итерация 3: адаптив по высоте — страница сжимается, список истории ограничен.
+assert.match(css, /\.dsh-team-page\{[^}]*min-height:0[^}]*max-height:100%[^}]*overflow-y:auto/)
+assert.match(css, /\.dsh-team-page\{[^}]*padding-bottom:24px/)
+assert.match(css, /\.dsh-team-history\{[^}]*max-height:160px[^}]*overflow-y:auto/)
+assert.match(css, /\.dsh-team-area\{[^}]*min-height:80px[^}]*max-height:220px/)
+assert.match(css, /\.dsh-team-pre\{[^}]*max-height:200px[^}]*overflow-y:auto/)
 
 const refresh = find(page, (element) => element.type === 'button' && texts(element).join('') === 'dshTeam.refresh')[0]
 assert.ok(refresh !== undefined, 'кнопка «Обновить»')

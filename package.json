@@ -1,6 +1,6 @@
 {
   "name": "dsh-team",
-  "version": "1.1.15",
+  "version": "1.1.16",
   "description": "РџР°РЅРµР»СЊ В«РљРѕРјР°РЅРґР°В»: С€Р°Р±Р»РѕРЅС‹ Р·Р°РґР°РЅРёР№, СЂРѕР»Рё, РїР°СЂР°Р»Р»РµР»СЊРЅРѕСЃС‚СЊ Рё РіРѕС‚РѕРІС‹Р№ С‚РµРєСЃС‚ РґР»СЏ РѕС‚РїСЂР°РІРєРё РІ С‡Р°С‚",
   "type": "module",
   "license": "MIT",
@@ -33,7 +33,7 @@
     "node": ">=22.15"
   },
   "scripts": {
-    "test": "node test/smoke.mjs"
+    "test": "node --test test/render.test.mjs && node test/smoke.mjs"
   },
   "dsh": {
     "bundle": {
