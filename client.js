@@ -34,6 +34,7 @@ window.__ModuleLoader__.load({
       templateRefactor: 'Refactoring',
       templateResearch: 'Research',
       templateTests: 'Tests',
+      templateHint: 'The template only fills the task and the roles — edit the text after choosing.',
       reviewSeed: 'Review the code in <path>: find errors and risks, suggest concrete fixes.',
       refactorSeed: 'Refactor <what>: keep behaviour, simplify the structure, run the tests.',
       researchSeed: 'Research <topic>: gather facts from the code and documentation, summarise the key findings.',
@@ -69,6 +70,7 @@ window.__ModuleLoader__.load({
       templateRefactor: 'Рефакторинг',
       templateResearch: 'Исследование',
       templateTests: 'Тесты',
+      templateHint: 'Шаблон заполняет только задачу и роли — текст можно править после выбора.',
       reviewSeed: 'Проведи ревью кода в <путь>: найди ошибки и риски, предложи конкретные правки.',
       refactorSeed: 'Отрефактори <что>: сохрани поведение, упрости структуру, прогони тесты.',
       researchSeed: 'Исследуй <тему>: собери факты из кода и документации, выдели ключевые выводы.',
@@ -112,22 +114,25 @@ window.__ModuleLoader__.load({
 .dsh-team-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
 .dsh-team-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;line-height:18px;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 12%, transparent);color:var(--dsw-alias-label-primary);white-space:nowrap}
 .dsh-team-chip-dot{width:8px;height:8px;border-radius:50%;background:var(--dsw-alias-brand-primary)}
-.dsh-team-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px}
+.dsh-team-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr));gap:12px;align-items:stretch}
 .dsh-team-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;min-width:0}
 .dsh-team-card-title{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:600;line-height:20px}
 .dsh-team-card-bar{flex:0 0 auto;width:3px;height:14px;border-radius:2px;background:var(--dsw-alias-brand-primary)}
 .dsh-team-label{font-size:12px;font-weight:600;color:var(--dsw-alias-label-secondary)}
+.dsh-team-hint{margin:0;font-size:12px;line-height:17px;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin-top:auto}
 .dsh-team-select{box-sizing:border-box;width:100%;height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;color-scheme:inherit;cursor:pointer}
 .dsh-team-area{box-sizing:border-box;width:100%;min-height:92px;padding:8px 10px;border-radius:9px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;line-height:18px;resize:vertical}
 .dsh-team-select:focus-visible,.dsh-team-area:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}
 .dsh-team-checks{display:flex;flex-direction:column;gap:8px}
 .dsh-team-check{display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:18px;cursor:pointer}
 .dsh-team-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.dsh-team-btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--dsw-alias-border-l4);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;font-weight:600;line-height:18px;cursor:pointer}
-.dsh-team-btn.is-primary{background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);color:#fff}
-.dsh-team-btn.is-small{height:32px;padding:0 12px;font-size:12px}
-.dsh-team-btn:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}
-.dsh-team-btn.is-primary:hover:not(:disabled){background:color-mix(in srgb, var(--dsw-alias-brand-primary) 86%, #fff)}
+.dsh-team-card > .dsh-team-row:last-child{margin-top:auto}
+.dsh-team-card > .dsh-team-pre{flex:1 1 auto}
+.dsh-team-btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--dsw-alias-border-l4);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;font-weight:600;line-height:18px;white-space:nowrap;cursor:pointer;transition:background-color .12s ease,border-color .12s ease,color .12s ease}
+.dsh-team-btn.is-primary{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 18%, transparent);border-color:color-mix(in srgb, var(--dsw-alias-brand-primary) 55%, transparent);color:var(--dsw-alias-brand-primary)}
+.dsh-team-btn.is-small{height:32px}
+.dsh-team-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}
+.dsh-team-btn.is-primary:hover:not(:disabled){background:color-mix(in srgb, var(--dsw-alias-brand-primary) 28%, transparent)}
 .dsh-team-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .dsh-team-btn:disabled{opacity:.55;cursor:default}
 .dsh-team-pre{margin:0;padding:12px;border-radius:10px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);font-family:inherit;font-size:12.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--dsw-alias-label-primary)}
@@ -137,7 +142,8 @@ window.__ModuleLoader__.load({
 .dsh-team-history-row:last-child{border-bottom:0}
 .dsh-team-history-row:hover{background:color-mix(in srgb, var(--dsw-alias-label-primary) 5%, transparent)}
 .dsh-team-notice{font-size:12.5px;line-height:18px;color:var(--dsw-alias-label-secondary)}
-@media (max-width:760px){.dsh-team-page{padding:18px 16px 32px !important}.dsh-team-head-actions{margin-left:0;width:100%;justify-content:flex-start}}
+@media (max-width:900px){.dsh-team-grid{grid-template-columns:1fr}}
+@media (max-width:640px){.dsh-team-page{padding:18px 16px 32px !important}.dsh-team-head-actions{margin-left:0;width:100%;justify-content:flex-start}.dsh-team-btn{max-width:100%}}
 `
 
     let translate = (key) => key
@@ -302,6 +308,7 @@ window.__ModuleLoader__.load({
               },
               ...TEMPLATES.map((item) => h('option', { key: item.id, value: item.id }, t(item.labelKey))),
             ),
+            h('p', { className: 'dsh-team-hint' }, t('templateHint')),
           ),
           h(
             Card,

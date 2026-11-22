@@ -1,4 +1,4 @@
-﻿import { readFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import assert from 'node:assert/strict'
 
 const source = await readFile(new URL('../client.js', import.meta.url), 'utf8')
@@ -132,7 +132,15 @@ assert.match(css, /border-radius:14px/)
 assert.match(css, /var\(--dsw-alias-bg-layer-1\)/)
 assert.match(css, /:focus-visible/)
 assert.match(css, /:disabled\{opacity:\.55/)
-assert.match(css, /@media \(max-width:760px\)/)
+assert.match(css, /@media \(max-width:900px\)/)
+assert.match(css, /@media \(max-width:640px\)/)
+// Итерация 2: единые кнопки, адаптивные сетки, выравнивание карточек.
+assert.match(css, /\.dsh-team-btn\{[^}]*height:36px[^}]*padding:0 14px[^}]*border-radius:10px[^}]*white-space:nowrap/)
+assert.match(css, /\.dsh-team-btn\.is-primary\{[^}]*brand-primary\) 18%[^}]*color:var\(--dsw-alias-brand-primary\)/)
+assert.match(css, /\.dsh-team-btn\.is-small\{height:32px\}/)
+assert.doesNotMatch(css, /color:#fff/, 'нет белого текста на заливке brand')
+assert.match(css, /minmax\(min\(100%, 280px\), 1fr\)/)
+assert.match(css, /margin-top:auto/, 'футер карточки прижат к низу')
 
 const refresh = find(page, (element) => element.type === 'button' && texts(element).join('') === 'dshTeam.refresh')[0]
 assert.ok(refresh !== undefined, 'кнопка «Обновить»')
