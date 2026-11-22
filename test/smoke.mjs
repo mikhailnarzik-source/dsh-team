@@ -77,7 +77,7 @@ const ctx = {
   },
   slots: {
     inject: (name, register) => {
-      assert.equal(name, 'plugins.detail.section')
+      assert.ok(['plugins.detail.section', 'main', 'sidebar.panellist'].includes(name), `неожиданный слот ${name}`)
       register()
     },
     register: (options, component) => registrations.push({ options, component }),
@@ -85,9 +85,18 @@ const ctx = {
 }
 
 exported.apply(ctx)
-assert.equal(registrations.length, 1)
-assert.equal(registrations[0].options.name, 'plugins.detail.section')
-assert.equal(registrations[0].options.id, 'dsh-team-detail')
+const detailRegistrations = registrations.filter((entry) => entry.options.name === 'plugins.detail.section')
+assert.equal(detailRegistrations.length, 1)
+assert.equal(detailRegistrations[0].options.name, 'plugins.detail.section')
+assert.equal(detailRegistrations[0].options.id, 'dsh-team-detail')
+
+// Собственная панель в левой панели: ключ main и id строки совпадают.
+const main = registrations.find((entry) => entry.options.name === 'main')
+assert.ok(main !== undefined, 'main-панель зарегистрирована')
+assert.equal(main.options.key, 'plugin-team')
+const sidebar = registrations.find((entry) => entry.options.name === 'sidebar.panellist')
+assert.ok(sidebar !== undefined, 'строка левой панели зарегистрирована по умолчанию')
+assert.equal(sidebar.options.id, 'plugin-team')
 
 // Словари: одинаковый набор подписей, включая новые для шапки.
 assert.equal(dictionaries.length, 1)
@@ -99,7 +108,7 @@ for (const key of ['refresh', 'chipParallel', 'chipSequential']) {
 }
 
 // Страница рисуется только для своего плагина.
-const component = registrations[0].component
+const component = detailRegistrations[0].component
 assert.equal(component({ subject: { kind: 'bundle', pkg: { name: 'dsh-other' } } }), null)
 assert.equal(component({ subject: { id: 'dsh-other' } }), null)
 const page = render(component({ subject: { kind: 'bundle', pkg: { name: 'dsh-team' } } }))
@@ -110,7 +119,7 @@ assert.equal(page.props.className, 'dsh-team-page')
 assert.equal(page.props.style.maxWidth, 960)
 assert.equal(page.props.style.margin, '0 auto')
 assert.equal(page.props.style.padding, '24px 28px')
-assert.equal(page.props.style.paddingBottom, 24)
+assert.equal(page.props.style.paddingBottom, 40)
 assert.equal(page.props.style.flexDirection, 'column')
 assert.equal(page.props.style.minHeight, 0)
 assert.equal(page.props.style.overflowY, 'auto')

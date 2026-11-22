@@ -126,14 +126,14 @@ test('страница — flex-колонка, сжимается в конте
   assert.equal(pageNode.props.style.maxHeight, '100%')
   assert.equal(pageNode.props.style.overflowY, 'auto')
   assert.equal(pageNode.props.style.padding, '24px 28px')
-  assert.equal(pageNode.props.style.paddingBottom, 24, 'нижний отступ страницы 24 px')
+  assert.equal(pageNode.props.style.paddingBottom, 40, 'нижний отступ страницы 40 px')
 
   assert.match(
     css,
     /\.dsh-team-page\{[^}]*min-height:0[^}]*max-height:100%[^}]*overflow-y:auto/,
     'CSS страницы тоже ограничивает высоту',
   )
-  assert.match(css, /\.dsh-team-page\{[^}]*padding:24px 28px[^}]*padding-bottom:24px/, 'нижний отступ 24 px в CSS')
+  assert.match(css, /\.dsh-team-page\{[^}]*padding:24px 28px[^}]*padding-bottom:40px/, 'нижний отступ 40 px в CSS')
   assert.doesNotMatch(css, /\.dsh-team-page\{[^}]*height:100vh/, 'страница не привязана к 100vh')
 })
 
@@ -185,5 +185,5 @@ test('кнопки: единая система из спеки v2', () => {
 
 test('версия плагина поднята на +0.0.1', () => {
   assert.match(PACKAGE.version, /^\d+\.\d+\.\d+$/)
-  assert.equal(PACKAGE.version, '1.1.16')
+  assert.equal(PACKAGE.version, '1.1.17')
 })

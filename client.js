@@ -21,6 +21,15 @@ window.__ModuleLoader__.load({
     const HISTORY_KEY = 'dsh-team:history'
     const HISTORY_LIMIT = 5
 
+    // Собственная панель плагина в левой панели: ключ main-панели и id строки
+    // обязаны совпадать, иначе клик не найдёт страницу. id в состоянии
+    // видимости dsh-polish — короткий ('team'), без префикса 'plugin-'.
+    const PANEL_ID = 'plugin-team'
+    const PANEL_SHORT_ID = 'team'
+    const PANEL_ORDER = 24
+    const PANEL_VISIBILITY_KEY = 'dsh-polish:panel-visibility'
+    const PANELS_CHANGED_EVENT = 'dsh-polish:panels-changed'
+
     const en = {
       title: 'Team',
       heading: 'Team of assistants',
@@ -105,7 +114,7 @@ window.__ModuleLoader__.load({
 
     /** Общий каркас страницы и элементов управления. */
     const CSS = `
-.dsh-team-page{width:100%;max-width:960px;margin:0 auto;padding:24px 28px;padding-bottom:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--dsw-alias-border-l3) transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;line-height:20px}
+.dsh-team-page{width:100%;max-width:960px;margin:0 auto;padding:24px 28px;padding-bottom:40px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--dsw-alias-border-l3) transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;line-height:20px}
 .dsh-team-page>*{flex:0 0 auto}
 .dsh-team-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .dsh-team-head-icon{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;font-size:24px;line-height:1;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 18%, transparent);border:1px solid color-mix(in srgb, var(--dsw-alias-brand-primary) 34%, transparent)}
@@ -151,6 +160,46 @@ window.__ModuleLoader__.load({
 `
 
     let translate = (key) => key
+
+    /* --- Видимость панели в левой панели (общий ключ dsh-polish) ---------- */
+
+    /** localStorage панелей; null, если хранилище недоступно (тесты, приватный режим). */
+    function panelStorage() {
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) return window.localStorage
+        if (typeof localStorage !== 'undefined' && localStorage) return localStorage
+      } catch {
+        // доступ к хранилищу запрещён — работаем на состоянии по умолчанию
+      }
+      return null
+    }
+
+    /**
+     * Состояние панелей из общего ключа dsh-polish:
+     * `{ visible: string[], pinned: string[] }`, id — короткие ('team').
+     * Пока пользователь ничего не менял, ключа нет: состояние по умолчанию —
+     * как у dsh-polish, панель видна и закреплена. Битое значение — то же самое.
+     */
+    function readPanelState() {
+      const fallback = { visible: [PANEL_SHORT_ID], pinned: [PANEL_SHORT_ID] }
+      const storage = panelStorage()
+      if (storage === null) return fallback
+      try {
+        const raw = storage.getItem(PANEL_VISIBILITY_KEY)
+        if (raw === null || raw === '') return fallback
+        const parsed = JSON.parse(raw)
+        if (parsed === null || typeof parsed !== 'object') return fallback
+        const ids = (value) => (Array.isArray(value) ? value.filter((id) => typeof id === 'string') : [])
+        return { visible: ids(parsed.visible), pinned: ids(parsed.pinned) }
+      } catch {
+        return fallback
+      }
+    }
+
+    /** Закреплена ли панель «Команда»: только закреплённые строки видны в левой панели. */
+    function isPanelPinned() {
+      return readPanelState().pinned.includes(PANEL_SHORT_ID)
+    }
 
     /** Собрать текст задания для команды. */
     function buildRequest({ task, roles, parallel }) {
@@ -272,7 +321,7 @@ window.__ModuleLoader__.load({
             maxWidth: 960,
             margin: '0 auto',
             padding: '24px 28px',
-            paddingBottom: 24,
+            paddingBottom: 40,
             boxSizing: 'border-box',
             display: 'flex',
             flexDirection: 'column',
@@ -420,6 +469,33 @@ window.__ModuleLoader__.load({
       return h(TeamPage)
     }
 
+    /**
+     * Собственная main-панель: клик в левой панели показывает только сборку
+     * задания командой — тот же компонент, что и в карточке плагина. Никаких
+     * блоков плагин-менеджера («Описание», «Источник», «Версия») здесь нет.
+     */
+    function TeamPanelPage() {
+      return h(TeamPage)
+    }
+
+    /** Эмодзи-иконка строки в левой панели (size задаёт хост: 16 или 18). */
+    function TeamPanelIcon(props) {
+      const requested = Number(props?.size)
+      const size = Number.isFinite(requested) && requested > 0 ? requested : 16
+      return h('span', {
+        'aria-hidden': true,
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: size,
+          height: size,
+          fontSize: Math.round(size * 0.95),
+          lineHeight: 1,
+        },
+      }, '👥')
+    }
+
     function apply(ctx) {
       ctx.locale.register(NS, { en, ru })
       translate = ctx.locale.bind(NS)
@@ -438,6 +514,64 @@ window.__ModuleLoader__.load({
         )
       } catch (error) {
         console.error('[dsh-team] секция страницы недоступна:', error)
+      }
+
+      // main-панель регистрируется всегда: выбор панели не должен упираться
+      // в отсутствующий ключ. Строка в левой панели — только пока закреплена.
+      try {
+        ctx.slots.inject('main', () =>
+          ctx.slots.register({ name: 'main', key: PANEL_ID, locale: NS }, TeamPanelPage),
+        )
+      } catch (error) {
+        console.error('[dsh-team] панель недоступна:', error)
+      }
+
+      // Строка левой панели: появляется/исчезает по общему состоянию dsh-polish,
+      // поэтому регистрация динамическая и снимается через disposer.
+      let disposePanelRow = null
+      const unregisterPanelRow = () => {
+        const dispose = disposePanelRow
+        disposePanelRow = null
+        if (typeof dispose !== 'function') return
+        try {
+          dispose()
+        } catch (error) {
+          console.error('[dsh-team] не удалось снять строку левой панели:', error)
+        }
+      }
+      const registerPanelRow = () => {
+        if (disposePanelRow !== null) return
+        try {
+          const dispose = ctx.slots.inject('sidebar.panellist', () =>
+            ctx.slots.register(
+              { name: 'sidebar.panellist', id: PANEL_ID, order: PANEL_ORDER, label: () => translate('title'), locale: NS },
+              TeamPanelIcon,
+            ),
+          )
+          disposePanelRow = typeof dispose === 'function' ? dispose : () => {}
+        } catch (error) {
+          // Хост без слота строк оставляет панель доступной через «Плагины».
+          console.error('[dsh-team] строка левой панели недоступна:', error)
+        }
+      }
+      const syncPanelRow = () => {
+        if (isPanelPinned()) registerPanelRow()
+        else unregisterPanelRow()
+      }
+      syncPanelRow()
+
+      // dsh-polish шлёт событие после каждого изменения видимости/закрепления.
+      const onPanelsChanged = () => syncPanelRow()
+      if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+        window.addEventListener(PANELS_CHANGED_EVENT, onPanelsChanged)
+      }
+      if (typeof ctx.effect === 'function') {
+        ctx.effect(() => () => {
+          if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+            window.removeEventListener(PANELS_CHANGED_EVENT, onPanelsChanged)
+          }
+          unregisterPanelRow()
+        }, 'team: panel row')
       }
     }
 
