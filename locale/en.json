@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Team",
-    "description": "Team panel: describe the task and pick roles — the plugin prepares a ready request for several assistants.",
+    "description": "Helps you put together a task for several assistants: pick a template, describe the task, tick the roles — the panel builds a ready request. Then press “Copy” and paste it into the message field. The panel lives under Settings → Plugins → the “Team” card. The plugin launches nothing by itself: it only prepares the request, and the agent runs the assistants.",
     "detail": "docs/DETAIL.md"
   }
 }
