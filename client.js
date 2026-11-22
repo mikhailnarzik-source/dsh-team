@@ -114,7 +114,7 @@ window.__ModuleLoader__.load({
 
     /** Общий каркас страницы и элементов управления. */
     const CSS = `
-.dsh-team-page{width:100%;max-width:960px;margin:0 auto;padding:24px 28px;padding-bottom:40px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--dsw-alias-border-l3) transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;line-height:20px}
+.dsh-team-page{width:100%;max-width:960px;margin:0 auto;padding:24px 28px;padding-bottom:40px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;flex:1 1 auto;min-width:0;min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--dsw-alias-border-l3) transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;line-height:20px}
 .dsh-team-page>*{flex:0 0 auto}
 .dsh-team-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .dsh-team-head-icon{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;font-size:24px;line-height:1;background:color-mix(in srgb, var(--dsw-alias-brand-primary) 18%, transparent);border:1px solid color-mix(in srgb, var(--dsw-alias-brand-primary) 34%, transparent)}
@@ -341,6 +341,7 @@ window.__ModuleLoader__.load({
             display: 'flex',
             flexDirection: 'column',
             gap: 16,
+            flex: '1 1 auto',
             minWidth: 0,
             minHeight: 0,
             maxHeight: '100%',

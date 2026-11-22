@@ -302,5 +302,5 @@ test('кнопки: единая система из спеки v2', () => {
 
 test('версия плагина поднята на +0.0.1', () => {
   assert.match(PACKAGE.version, /^\d+\.\d+\.\d+$/)
-  assert.equal(PACKAGE.version, '1.1.18')
+  assert.equal(PACKAGE.version, '1.1.19')
 })
